@@ -1,0 +1,24 @@
+export MCObservableSet
+typealias MCObservableSet{Obs<:MCObservable} Dict{ASCIIString, Obs}
+
+export makeMCObservable
+
+function makeMCObservable{Obs}(oset::MCObservableSet{Obs}, name::ASCIIString)
+  if haskey(oset, name)
+    warning("""Observable "$name" already exists. (Skipped)""")
+  else
+    oset[name] = Obs()
+  end
+end
+
+function reset(oset::MCObservableSet) 
+  for v in values(oset)
+    reset!(oset)
+  end
+end
+
+function show(io::IO, obs::MCObservableSet)
+  for k in keys(obs)
+    println(io, k, " : ", obs[k])
+  end
+end
