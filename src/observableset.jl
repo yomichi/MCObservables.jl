@@ -17,8 +17,15 @@ function reset(oset::MCObservableSet)
   end
 end
 
-function show(io::IO, obs::MCObservableSet)
-  for k in keys(obs)
-    println(io, k, " : ", obs[k])
+function show(io::IO, obs::MCObservableSet, sorted::Bool = true)
+  if sorted
+    ks = sort([k for k in keys(obs)])
+    for k in ks
+      println(io, k, " : ", obs[k])
+    end
+  else
+    for k in keys(obs)
+      println(io, k, " : ", obs[k])
+    end
   end
 end

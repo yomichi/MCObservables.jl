@@ -1,6 +1,6 @@
 module MCObservables
 
-import Base.show, Base.<<
+import Base: show, <<, count
 export MCObservable, mean, var, stderr, show, dump_plot
 
 abstract MCObservable
@@ -21,6 +21,7 @@ include ("observableset.jl")
 include ("simple.jl")
 include ("binning.jl")
 include ("jackknife.jl")
+include ("second_jackknife.jl")
 
 ## these three definitions are needed to resolve ambiguousness with Base.<<(Any,Integer)
 <<(obs::MCObservable, x::Int32) = add!(obs,x)

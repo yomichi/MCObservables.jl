@@ -8,11 +8,14 @@ end
 Jackknife(jk::Jackknife, f::Function) = Jackknife(map(f,jk.xs))
 
 function Jackknife(b::BinningObservable)
-  if b.count > 0
-    xs = b.bins[maxlevel(b)]
+  if count(b) > 0
+    level = maxlevel(b)
+    xs = b.bins[level]
+    if b.nincomplete[level] > 0
+      push!(xs, b.incompletes[level]/b.nincomplete[level])
+    end
     s = sum(xs)
     n = length(xs)
-    m = s/n
     jk = map(x->(s-x)/(n-1), xs)
     return Jackknife(jk)
   else
@@ -41,7 +44,7 @@ function stderr(jk::Jackknife)
   else
     sums = mapreduce(x->[x,x*x], +, jk.xs)
     sums /= n
-    sigma2 = sums[2] - sums[1]^2
+    sigma2 = sums[2] - sums[1]*sums[1]
     sigma2 *= n-1
     return sqrt(sigma2)
   end
@@ -77,7 +80,7 @@ unary_functions = (
   :besselj0, :besselj1, 
   :bessely0, :bessely1,
   :eta, :zeta
-  )
+)
 
 for op in unary_functions
   eval( Expr(:import, :Base, op) )
@@ -87,7 +90,7 @@ end
 
 binary_functions = (
   :+, :-, :*, :/, :\
-  )
+)
 
 for op in binary_functions
   eval( Expr(:import, :Base, op) )
