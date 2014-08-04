@@ -20,7 +20,7 @@ function reset!(obs :: SimpleObservable)
   return obs
 end
 
-function add!(obs :: SimpleObservable, value) 
+function push!(obs :: SimpleObservable, value) 
   obs.num += 1
   obs.sum += value
   obs.sum2 += value^2

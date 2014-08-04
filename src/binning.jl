@@ -1,6 +1,6 @@
 import Base: zeros, mean
 
-export BinningObservable, add!, tau, reset!
+export BinningObservable, push!, tau, reset!
 export BinningObservableSet
 
 type BinningObservable <: MCObservable
@@ -17,7 +17,7 @@ BinningObservable() = BinningObservable( (Vector{Float64})[(Float64)[]], zeros(1
 
 count(b::BinningObservable) = length(b.entries[1])
 
-function add!(b::BinningObservable, x::Real)
+function push!(b::BinningObservable, x::Real)
   push!(b.bins[1], x)
   b.sum[1] += x
   b.sum2[1] += x*x
@@ -54,7 +54,7 @@ function add!(b::BinningObservable, x::Real)
 end
 
 #=
-function add!(b::BinningObservable, x)
+function push!(b::BinningObservable, x)
   push!(b.bins[1], x)
   b.sum[1] += x
   b.sum2[1] += x*x
