@@ -1,20 +1,22 @@
 module MCObservables
 
-import Base: show, <<, count, push!
-export MCObservable, mean, var, stderr, show, dump_plot
+import Base: show, <<, push!, mean, var, count, isempty
+export MCObservable, mean, var, stderror, show, dump_plot
 
 abstract MCObservable
 
+isempty(obs::MCObservable) = count(obs) == 0
+
 function show(io::IO, obs::MCObservable)
-  try
-    print(io, mean(obs), " +/- ", stderr(obs))
-  catch
+  if !isempty(obs)
+    print(io, mean(obs), " +/- ", stderror(obs))
+  else
     print(io, "No Entries")
   end
 end
 
 function dump_plot(io::IO, obs::MCObservable)
-  print(io, mean(obs), " ", stderr(obs))
+  print(io, mean(obs), " ", stderror(obs))
 end
 
 include ("observableset.jl")

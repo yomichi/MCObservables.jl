@@ -9,11 +9,7 @@ Jackknife(jk::Jackknife, f::Function) = Jackknife(map(f,jk.xs))
 
 function Jackknife(b::BinningObservable)
   if count(b) > 0
-    level = maxlevel(b)
-    xs = b.bins[level]
-    if b.nincomplete[level] > 0
-      push!(xs, b.incompletes[level]/b.nincomplete[level])
-    end
+    xs = b.bins
     s = sum(xs)
     n = length(xs)
     jk = map(x->(s-x)/(n-1), xs)
@@ -23,24 +19,21 @@ function Jackknife(b::BinningObservable)
   end
 end
 
-import Base.count, Base.isempty
-
 count(jk::Jackknife) = length(jk.xs)
-isempty(jk::Jackknife) = isempty(jk.xs)
 
 function mean(jk::Jackknife)
   if isempty(jk) 
-    throw(DomainError())
+    return nan(Float64)
   else
     return mean(jk.xs)
   end
 end
-function stderr(jk::Jackknife)
+function stderror(jk::Jackknife)
   n = count(jk)
   if n == 0
-    throw(DomainError())
+    return nan(Float64)
   elseif n == 1
-    return Inf
+    return inf(Float64)
   else
     sums = mapreduce(x->[x,x*x], +, jk.xs)
     sums /= n

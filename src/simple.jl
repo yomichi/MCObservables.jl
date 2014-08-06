@@ -20,6 +20,8 @@ function reset!(obs :: SimpleObservable)
   return obs
 end
 
+count(obs::SimpleObservable) = obs.num
+
 function push!(obs :: SimpleObservable, value) 
   obs.num += 1
   obs.sum += value
@@ -45,7 +47,7 @@ function var(obs::SimpleObservable)
   end
 end
 stddev(obs::SimpleObservable) = sqrt(var(obs))
-stderr(obs::SimpleObservable) = sqrt(var(obs)/obs.num)
+stderror(obs::SimpleObservable) = sqrt(var(obs)/obs.num)
 
 
 export SimpleObservableSet
