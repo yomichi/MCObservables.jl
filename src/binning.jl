@@ -99,7 +99,9 @@ function var(b::BinningObservable, level::Int = 1)
   s = sum(b, level)
   s2 = sum2(b, level)
   if n > 1
-    return (s2 - s*s/n)/(n-1)
+    v2 = s2 - s*s/n
+    v2 = max(v2, 0.0)
+    return v2/(n-1)
   elseif n == 1
     return inf(Float64)
   else

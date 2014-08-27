@@ -33,17 +33,18 @@ function mean(obs::SimpleObservable)
   if obs.num > 0
     return obs.sum / obs.num
   else
-    throw(DomainError())
+    return NaN
   end
 end
 
 function var(obs::SimpleObservable)
   if obs.num  > 1
-    return obs.sum2/(obs.num-1) - obs.sum*obs.sum/(obs.num*(obs.num-1))
+    v = (obs.sum2 - obs.sum*obs.sum/obs.num)/(obs.num-1)
+    return max(v, 0.0)
   elseif obs.num == 1
     return 1.0/0.0
   else
-    throw(DomainError())
+    return NaN
   end
 end
 stddev(obs::SimpleObservable) = sqrt(var(obs))

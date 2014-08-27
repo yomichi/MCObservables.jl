@@ -39,6 +39,7 @@ function stderror(jk::Jackknife)
     sums /= n
     sigma2 = sums[2] - sums[1]*sums[1]
     sigma2 *= n-1
+    sigma2 = max(sigma2, 0.0)
     return sqrt(sigma2)
   end
 end
