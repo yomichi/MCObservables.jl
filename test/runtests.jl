@@ -1,5 +1,9 @@
 using MCObservables
 using Base.Test
 
-# write your own tests here
-@test 1 == 1
+include("inform.jl")
+
+include("SimpleObservable.jl")
+include("Jackknife.jl")
+include("BinningObservable.jl")
+
