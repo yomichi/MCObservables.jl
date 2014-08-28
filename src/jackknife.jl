@@ -97,6 +97,7 @@ end
 
 typealias JackknifeSet MCObservableSet{Jackknife}
 
+jackknife(bin::BinningObservable) = Jackknife(bin)
 function jackknife(obsset :: BinningObservableSet)
   JK = JackknifeSet()
   for (k,v) in obsset
