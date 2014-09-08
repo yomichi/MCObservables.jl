@@ -1,8 +1,9 @@
-require("LsqFit")
+using LsqFit
 
 import Base: zeros, mean, var, sum
 
 export BinningObservable, push!, tau, reset!
+export extrapolate_tau, extrapolate_stderror
 export BinningObservableSet
 
 type BinningObservable <: MCObservable
@@ -113,22 +114,34 @@ function stderror(b::BinningObservable, level::Int = maxlevel(b))
   return sqrt(var(b,level)/count(b,level))
 end
 
+function confidence_interval(b::BinningObservable, confidence_rate::Real, level::Int = maxlevel(b))
+  q = 0.5+0.5*confidence_rate
+  correction = quantile( TDist(count(b,level)), q)
+  serr = stderror(b, level)
+  return correction * serr
+end
+function confidence_interval(b::BinningObservable, confidence_rate_symbol::Symbol = :sigma1, level::Int = maxlevel(b))
+  n = parsesigma(confidence_rate_symbol)
+  return confidence_interval(b, erf(0.5n*sqrt(2.0)), level)
+end
+
 function tau(b::BinningObservable, level::Int = maxlevel(b))
   binsize = 1<<(level-1)
   return 0.5*( (binsize*var(b,level))/var(b) - 1.0)
 end
 
 linearmodel(x::Float64, p::Vector{Float64}) = p[1] + x*p[2]
+linearmodel(xs::Vector{Float64}, p::Vector{Float64}) = map(x->linearmodel(x,p),xs)
 
 function extrapolate_detail(op :: Function, b::BinningObservable, point::Int)
-  ml = maxlevel(obs)
+  ml = maxlevel(b)
   ll = max(ml-point+1, 1)
   levels = ll:ml
   ns = map( level->1<<(level-1), levels)
   ninvs = ns .\ 1.0
   ys = map( level->op(b, level), levels)
-  fit = LsqFit.curve_fit(linearmodel, ninvs, ys, [ys[end], 0.0])
-  return fit.param[1], LsqFIt.estimate_errors(fit)[1]
+  fit = curve_fit(linearmodel, ninvs, ys, [ys[end], 0.0])
+  return fit.param[1], estimate_errors(fit)[1]
 end
 extrapolate_tau(b::BinningObservable, point::Int = 5) = extrapolate_detail(tau, b, point)
 extrapolate_stderror(b::BinningObservable, point::Int = 5) = extrapolate_detail(stderror, b, point)

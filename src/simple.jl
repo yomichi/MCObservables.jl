@@ -48,7 +48,18 @@ function var(obs::SimpleObservable)
   end
 end
 stddev(obs::SimpleObservable) = sqrt(var(obs))
-stderror(obs::SimpleObservable) = sqrt(var(obs)/obs.num)
+stderror(obs::SimpleObservable) = sqrt(var(obs)/count(obs))
+function confidence_interval(obs::SimpleObservable, confidence_rate :: Real)
+  q = 0.5 + 0.5confidence_rate
+  correction = quantile( TDist(obs.num - 1), q)
+  serr = stderror(obs)
+  return correction * serr
+end
+
+function confidence_interval(obs::SimpleObservable, confidence_rate_symbol::Symbol = :sigma1)
+  n = parsesigma(confidence_rate_symbol)
+  return confidence_interval(obs, erf(0.5n*sqrt(2.0)))
+end
 
 
 export SimpleObservableSet

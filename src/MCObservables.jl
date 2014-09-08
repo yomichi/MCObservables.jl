@@ -3,6 +3,8 @@ module MCObservables
 import Base: show, <<, push!, mean, var, count, isempty
 export MCObservable, mean, var, stderror, show, dump_plot
 
+using Distributions
+
 abstract MCObservable
 
 isempty(obs::MCObservable) = count(obs) == 0
@@ -19,7 +21,10 @@ function dump_plot(io::IO, obs::MCObservable)
   print(io, mean(obs), " ", stderror(obs))
 end
 
+const confidence_rate_1sigma = 0.5erf(0.5sqrt(2.0))
+
 include ("observableset.jl")
+include ("parsesigma.jl")
 include ("simple.jl")
 include ("binning.jl")
 include ("jackknife.jl")
