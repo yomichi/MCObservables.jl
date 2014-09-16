@@ -11,8 +11,8 @@ function testJackknife(numtest, MCS)
     end
     jk = jackknife(bobs)
     
-    @test_approx_eq mean(bobs) mean(jk)
-    @test_approx_eq stderror(bobs) stderror(jk)
+    @test_approx_eq_eps mean(bobs) mean(jk) 1.0e-10
+    @test_approx_eq_eps stderror(bobs) stderror(jk) 1.0e-10
   end
   inform("Success testing Jackknife")
 end
