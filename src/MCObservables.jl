@@ -2,6 +2,7 @@ module MCObservables
 
 import Base: show, <<, push!, mean, var, count, isempty
 export MCObservable, mean, var, stderror, show, dump_plot
+export confidence_interval
 
 using Distributions
 
