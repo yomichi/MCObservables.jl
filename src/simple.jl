@@ -61,6 +61,33 @@ function confidence_interval(obs::SimpleObservable, confidence_rate_symbol::Symb
   return confidence_interval(obs, erf(0.5n*sqrt(2.0)))
 end
 
+function merge!(obs::SimpleObservable, other::SimpleObservable)
+  obs.num += other.num
+  obs.sum += other.sum
+  obs.sum2 += other.sum2
+  return obs
+end
+merge(lhs::SimpleObservable, rhs::SimpleObservable) = merge!(deepcopy(lhs), rhs)
 
 export SimpleObservableSet
 typealias SimpleObservableSet MCObservableSet{SimpleObservable}
+
+function merge!(obs::SimpleObservableSet, other::SimpleObservableSet)
+  obs_names = Set(keys(obs))
+  union!(obs_name, Set(keys(other)))
+  for name in obs_names
+    if !haskey(obs, name)
+      # in other only
+      obs[name] = deepcopy(other[name])
+    elseif haskey(other, name)
+      # in both
+      merge!(obs[name], other[name])
+
+    # else
+    # in obs only
+    # NOTHING to do
+    end
+  end
+  return obs
+end
+merge(lhs::SimpleObservableSet, rhs::SimpleObservableSet) = merge!(deepcopy(lhs), rhs)

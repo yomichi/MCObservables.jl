@@ -1,7 +1,9 @@
 module MCObservables
 
-import Base: show, <<, push!, mean, var, count, isempty
+import Base: show, <<, push!, mean, var, count, isempty, merge, merge!
 export MCObservable, mean, var, stderror, show, dump_plot
+export merge, merge!
+
 export confidence_interval
 
 using Distributions
