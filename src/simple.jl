@@ -74,7 +74,7 @@ typealias SimpleObservableSet MCObservableSet{SimpleObservable}
 
 function merge!(obs::SimpleObservableSet, other::SimpleObservableSet)
   obs_names = Set(keys(obs))
-  union!(obs_name, Set(keys(other)))
+  union!(obs_names, Set(keys(other)))
   for name in obs_names
     if !haskey(obs, name)
       # in other only
