@@ -1,7 +1,7 @@
 export Jackknife, JackknifeSet
 export jackknife
 
-type Jackknife <: ScalarObservable
+type Jackknife <: MCObservable
   xs :: Vector{Float64}
 end
 

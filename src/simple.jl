@@ -2,7 +2,7 @@ import Base: zero, zeros, deepcopy, mean, show
 
 export SimpleObservable, stddev
 
-type SimpleObservable <: MCObservable
+type SimpleObservable <: ScalarObservable
   num :: Int64
   sum :: Float64
   sum2 :: Float64
@@ -42,7 +42,7 @@ function var(obs::SimpleObservable)
     v = (obs.sum2 - obs.sum*obs.sum/obs.num)/(obs.num-1)
     return max(v, 0.0)
   elseif obs.num == 1
-    return 1.0/0.0
+    return Inf
   else
     return NaN
   end
@@ -50,6 +50,9 @@ end
 stddev(obs::SimpleObservable) = sqrt(var(obs))
 stderror(obs::SimpleObservable) = sqrt(var(obs)/count(obs))
 function confidence_interval(obs::SimpleObservable, confidence_rate :: Real)
+  if count(obs) < 2
+    return Inf
+  end
   q = 0.5 + 0.5confidence_rate
   correction = quantile( TDist(obs.num - 1), q)
   serr = stderror(obs)

@@ -1,7 +1,7 @@
 module MCObservables
 
 import Base: show, <<, push!, mean, var, count, isempty, merge, merge!
-export MCObservable, mean, var, stderror, show, dump_plot
+export MCObservable, ScalarObservable, VectorObservable, mean, var, stderror, show, dump_plot
 export merge, merge!
 
 export confidence_interval
@@ -9,6 +9,8 @@ export confidence_interval
 using Distributions
 
 abstract MCObservable
+abstract ScalarObservable <: MCObservable
+abstract VectorObservable <: MCObservable
 
 isempty(obs::MCObservable) = count(obs) == 0
 
@@ -26,10 +28,13 @@ end
 
 const confidence_rate_1sigma = 0.5erf(0.5sqrt(2.0))
 
+include ("util.jl")
 include ("observableset.jl")
 include ("parsesigma.jl")
 include ("simple.jl")
+include ("simplevector.jl")
 include ("binning.jl")
+include ("binningvector.jl")
 include ("jackknife.jl")
 include ("second_jackknife.jl")
 
