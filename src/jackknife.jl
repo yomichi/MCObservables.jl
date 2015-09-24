@@ -92,7 +92,7 @@ for op in binary_functions
   @eval ($op)(jk::Jackknife, rhs::Real) = Jackknife(jk, lhs->($op)(lhs,rhs))
   @eval ($op)(lhs::Real, jk::Jackknife) = Jackknife(jk, rhs->($op)(lhs,rhs))
   op_bw = symbol("."*string(op))
-  @eval ($op)(lhs::Jackknife, rhs::Jackknife) = Jackknife( ($op_bw) (lhs.xs, rhs.xs))
+  @eval ($op)(lhs::Jackknife, rhs::Jackknife) = Jackknife( ($op_bw)(lhs.xs, rhs.xs))
 end
 
 typealias JackknifeSet MCObservableSet{Jackknife}
