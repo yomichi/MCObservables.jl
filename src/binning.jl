@@ -1,8 +1,6 @@
 using LsqFit
 
-import Base: zeros, mean, var, sum
-
-export BinningObservable, push!, tau, reset!
+export BinningObservable, tau
 export extrapolate_tau, extrapolate_stderror
 export BinningObservableSet
 

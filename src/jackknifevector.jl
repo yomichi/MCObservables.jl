@@ -1,45 +1,49 @@
-export Jackknife, JackknifeSet
-export jackknife
+export JackknifeVector, JackknifeVectorSet
 
-type Jackknife <: MCObservable
-  xs :: Vector{Float64}
+type JackknifeVector <: VectorObservable
+  xs :: Vector{Vector{Float64}}
 end
 
-Jackknife(jk::Jackknife, f::Function) = Jackknife(map(f,jk.xs))
+JackknifeVector() = JackknifeVector(Vector{Float64}[])
 
-function Jackknife(b::BinningObservable)
-  if count(b) > 0
-    xs = b.bins
-    s = sum(xs)
-    n = length(xs)
-    jk = map(x->(s-x)/(n-1), xs)
-    return Jackknife(jk)
+function JackknifeVector(jk::JackknifeVector, f::Function) 
+  xs = similar(jk.xs)
+  for i in 1:length(jk.xs)
+    xs[i] = f(jk.xs[i])
+  end
+  JackknifeVector(xs)
+end
+
+function JackknifeVector(o::VectorObservable)
+  if isempty(o)
+    return JackknifeVector()
   else
-    return Jackknife(zeros(0))
+    return JackknifeVector(jk_helper(o.bins))
   end
 end
 
-count(jk::Jackknife) = length(jk.xs)
+count(jk::JackknifeVector) = length(jk.xs)
 
-function mean(jk::Jackknife)
+function mean(jk::JackknifeVector)
   if isempty(jk) 
-    return nan(Float64)
+    return NaN
   else
     return mean(jk.xs)
   end
 end
-function stderror(jk::Jackknife)
+function stderror(jk::JackknifeVector)
   n = count(jk)
   if n == 0
-    return nan(Float64)
+    return NaN
   elseif n == 1
-    return inf(Float64)
+    return Inf
   else
-    sums = mapreduce(x->[x,x*x], +, jk.xs)
-    sums /= n
-    sigma2 = sums[2] - sums[1]*sums[1]
+    m2 = sumabs2(jk.xs)
+    m2 /= n
+    m = mean(jk)
+    sigma2 = m2 - m.*m
     sigma2 *= n-1
-    sigma2 = max(sigma2, 0.0)
+    map!(maxzero, sigma2)
     return sqrt(sigma2)
   end
 end
@@ -79,29 +83,51 @@ unary_functions = (
 for op in unary_functions
   eval( Expr(:import, :Base, op) )
   eval( Expr(:export, op) )
-  @eval ($op)(jk::Jackknife) = Jackknife(jk, $op)
+  @eval ($op)(jk::JackknifeVector) = JackknifeVector(jk, $op)
 end
 
 binary_functions = (
   :+, :-, :*, :/, :\
 )
 
-for op in binary_functions
+for op in ( :+, :-, :.+, :.- )
   eval( Expr(:import, :Base, op) )
   eval( Expr(:export, op) )
-  @eval ($op)(jk::Jackknife, rhs::Real) = Jackknife(jk, lhs->($op)(lhs,rhs))
-  @eval ($op)(lhs::Real, jk::Jackknife) = Jackknife(jk, rhs->($op)(lhs,rhs))
-  op_bw = symbol("."*string(op))
-  @eval ($op)(lhs::Jackknife, rhs::Jackknife) = Jackknife( ($op_bw) (lhs.xs, rhs.xs))
+  @eval ($op)(jk::JackknifeVector, rhs::Real) = JackknifeVector(jk, lhs->($op)(lhs,rhs))
+  @eval ($op)(jk::JackknifeVector, rhs::Vector) = JackknifeVector(jk, lhs->($op)(lhs,rhs))
+  @eval ($op)(lhs::Real, jk::JackknifeVector) = JackknifeVector(jk, rhs->($op)(lhs,rhs))
+  @eval ($op)(lhs::Vector, jk::JackknifeVector) = JackknifeVector(jk, rhs->($op)(lhs,rhs))
+  @eval ($op)(lhs::JackknifeVector, rhs::JackknifeVector) = JackknifeVector( ($op)(lhs.xs, rhs.xs))
+end
+for op in ( :*, :/, :\)
+  eval( Expr(:import, :Base, op) )
+  eval( Expr(:export, op) )
+  @eval ($op)(lhs::Real, jk::JackknifeVector) = JackknifeVector(jk, rhs->($op)(lhs,rhs))
+  @eval ($op)(jk::JackknifeVector, rhs::Real) = JackknifeVector(jk, lhs->($op)(lhs,rhs))
+end
+for op in ( :.*, :./, :.\, :.^)
+  eval( Expr(:import, :Base, op) )
+  eval( Expr(:export, op) )
+  @eval ($op)(lhs::Real, jk::JackknifeVector) = JackknifeVector(jk, rhs->($op)(lhs,rhs))
+  @eval ($op)(lhs::Vector, jk::JackknifeVector) = JackknifeVector(jk, rhs->($op)(lhs,rhs))
+  @eval ($op)(jk::JackknifeVector, rhs::Real) = JackknifeVector(jk, lhs->($op)(lhs,rhs))
+  @eval ($op)(jk::JackknifeVector, rhs::Vector) = JackknifeVector(jk, lhs->($op)(lhs,rhs))
+  @eval ($op)(lhs::JackknifeVector, rhs::JackknifeVector) = begin
+    xs = similar(lhs.xs)
+    for i in 1:length(lhs.xs)
+      xs[i] = ($op)(lhs.xs[i], rhs.xs[i])
+    end
+    return JackknifeVector(xs)
+  end
 end
 
 typealias JackknifeSet MCObservableSet{Jackknife}
 
-jackknife(bin::BinningObservable) = Jackknife(bin)
-function jackknife(obsset :: BinningObservableSet)
+jackknife(obs::VectorObservable) = JackknifeVector(obs)
+function jackknife{Obs<:VectorObservable}(obsset :: MCObservableSet{Obs})
   JK = JackknifeSet()
   for (k,v) in obsset
-    JK[k] = Jackknife(v)
+    JK[k] = JackknifeVector(v)
   end
   return JK
 end

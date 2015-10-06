@@ -1,19 +1,16 @@
-import Base: zero, zeros, deepcopy, mean, show
-
 export SimpleVectorObservable, stddev
 
 type SimpleVectorObservable <: VectorObservable
+  bins :: Vector{Vector{Float64}}
   num :: Int64
   sum :: Vector{Float64}
   sum2 :: Vector{Float64}
 end
 
-SimpleVectorObservable() = SimpleVectorObservable(0, Float64[], Float64[])
-zero(::Type{SimpleVectorObservable}) = SimpleVectorObservable()
-zero(o::SimpleVectorObservable) = SimpleVectorObservable()
-zeros(::Type{SimpleVectorObservable}, dims...) = reshape([zero(SimpleVectorObservable) for i in 1:prod(dims)],dims)
+SimpleVectorObservable() = SimpleVectorObservable(Vector{Float64}[], 0, Float64[], Float64[])
 
 function reset!(obs :: SimpleVectorObservable)
+  obs.bins = Vector{Vector{Float64}}[]
   obs.num = 0
   obs.sum = Float64[]
   obs.sum2 = Float64[]
@@ -25,12 +22,16 @@ count(obs::SimpleVectorObservable) = obs.num
 function push!(obs :: SimpleVectorObservable, value::Vector)
   if obs.num == 0
     obs.num = 1
+    push!(obs.bins, value)
     obs.sum = deepcopy(value)
     obs.sum2 = squared(value)
   else
+    push!(obs.bins, value)
     obs.num += 1
-    obs.sum += value
-    obs.sum2 += squared(value)
+    for i in 1:length(obs.bins[1])
+      obs.sum[i] += value[i]
+      obs.sum2[i] += squared(value[i])
+    end
   end
   return obs
 end
@@ -46,7 +47,7 @@ end
 function var(obs::SimpleVectorObservable)
   if obs.num  > 1
     v = (obs.sum2 - squared(obs.sum)/obs.num)/(obs.num-1)
-    return map(max0, v)
+    return map(maxzero, v)
   elseif obs.num == 1
     return fill(Inf, length(obs.sum))
   else
@@ -73,9 +74,12 @@ function confidence_interval(obs::SimpleVectorObservable, confidence_rate_symbol
 end
 
 function merge!(obs::SimpleVectorObservable, other::SimpleVectorObservable)
+  append!(obs.bins, other.bins)
   obs.num += other.num
-  obs.sum += other.sum
-  obs.sum2 += other.sum2
+  for i in 1:length(obs.bins[i])
+    obs.sum[i] += other.sum[i]
+    obs.sum2[i] += other.sum2[i]
+  end
   return obs
 end
 merge(lhs::SimpleVectorObservable, rhs::SimpleVectorObservable) = merge!(deepcopy(lhs), rhs)

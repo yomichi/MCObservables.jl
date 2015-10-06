@@ -1,7 +1,9 @@
 module MCObservables
 
-import Base: show, <<, push!, mean, var, count, isempty, merge, merge!
-export MCObservable, ScalarObservable, VectorObservable, mean, var, stderror, show, dump_plot
+import Base: show, <<, push!, mean, var, count, isempty, merge, merge!, zero, zeros, sum
+export MCObservable, ScalarObservable, VectorObservable
+export mean, var, stderror, confidence_interval
+export show, dump_plot
 export merge, merge!
 
 export confidence_interval
@@ -13,6 +15,12 @@ abstract ScalarObservable <: MCObservable
 abstract VectorObservable <: MCObservable
 
 isempty(obs::MCObservable) = count(obs) == 0
+
+zero{Obs<:MCObservable}(::Type{Obs}) = Obs()
+zero(obs::MCObservable) = zero(typeof(obs))
+function zeros{Obs<:MCObservable}(::Type{Obs}, dim...)
+  reshape(Obs[Obs() for i in 1:prod(dim)], dim)
+end
 
 function show(io::IO, obs::MCObservable)
   if !isempty(obs)
@@ -32,12 +40,13 @@ include("util.jl")
 include("observableset.jl")
 include("parsesigma.jl")
 include("tiny.jl")
+include("tinyvector.jl")
 include("simple.jl")
 include("simplevector.jl")
 include("binning.jl")
 include("binningvector.jl")
 include("jackknife.jl")
-include("second_jackknife.jl")
+include("jackknifevector.jl")
 
 ## these three definitions are needed to resolve ambiguousness with Base.<<(Any,Integer)
 <<(obs::MCObservable, x::Int32) = push!(obs,x)

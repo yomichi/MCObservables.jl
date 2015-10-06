@@ -1,6 +1,6 @@
 using LsqFit
 
-import Base: zeros, mean, var, sum
+import Base: mean, var, sum
 
 export BinningVectorObservable, push!, tau, reset!
 export extrapolate_tau, extrapolate_stderror
@@ -20,7 +20,7 @@ type BinningVectorObservable <: VectorObservable
 end
 
 BinningVectorObservable(minbinnum::Int = 128) = BinningVectorObservable( 
-  Vector{Float64}[], Vector{Float64}[], Vector{Float64}[], zeros(1), zeros(Int,1), 1, 0, minbinnum, 1
+  Vector{Float64}[], Vector{Float64}[], Vector{Float64}[], Vector{Float64}[], zeros(Int,1), 1, 0, minbinnum, 1
 )
 
 function reset!(b::BinningVectorObservable)
@@ -55,7 +55,7 @@ function push!(b::BinningVectorObservable, x::Vector)
     b.bins[end] /= b.binsize
     b.lastbin = 0
     if length(b.bins) == 2(b.minbinnum)
-      new_bins = zeros(b.minbinnum)
+      new_bins = Vector{Vector{Float64}}(b.minbinnum)
       for i in 1:b.minbinnum
         new_bins[i] = 0.5(b.bins[2i-1]+b.bins[2i])
       end
@@ -67,8 +67,8 @@ function push!(b::BinningVectorObservable, x::Vector)
 
   ## binning
   if b.entries[1] == 0
-    b.sum[1] = deepcopy(x)
-    b.sum2[1] = squared(x)
+    push!(b.sum, deepcopy(x))
+    push!(b.sum2, squared(x))
   else
     b.sum[1] += x
     b.sum2[1] += squared(x)
@@ -79,8 +79,8 @@ function push!(b::BinningVectorObservable, x::Vector)
   bsize = 2
   while i & 1 > 0
     if level > length(b.sum)
-      push!(b.sum, Float64[])
-      push!(b.sum2, Float64[])
+      push!(b.sum, zeros(length(x)))
+      push!(b.sum2,zeros(length(x)))
       push!(b.entries, 0)
     end
     lastbin = b.sum[1]/bsize - b.sum[level]
@@ -111,8 +111,8 @@ function var(b::BinningVectorObservable, level::Int = 1)
   s = sum(b, level)
   s2 = sum2(b, level)
   if n > 1
-    v2 = s2 - s*s/n
-    return map(max0, v2/(n-1))
+    v2 = s2 - s.*s/n
+    return map(maxzero, v2/(n-1))
   elseif n == 1
     return fill(Inf, length(b.sum[1]))
   else

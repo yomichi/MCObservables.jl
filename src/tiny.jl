@@ -1,6 +1,4 @@
-import Base: zero, zeros, deepcopy, mean, show
-
-export TinyObservable, stddev
+export TinyObservable
 
 type TinyObservable <: ScalarObservable
   num :: Int64
@@ -9,9 +7,6 @@ type TinyObservable <: ScalarObservable
 end
 
 TinyObservable() = TinyObservable(0, 0.0, 0.0)
-zero(::Type{TinyObservable}) = TinyObservable()
-zero(o::TinyObservable) = TinyObservable()
-zeros(::Type{TinyObservable}, dims...) = reshape([zero(TinyObservable) for i in 1:prod(dims)],dims)
 
 function reset!(obs :: TinyObservable)
   obs.num = 0
@@ -25,7 +20,7 @@ count(obs::TinyObservable) = obs.num
 function push!(obs :: TinyObservable, value) 
   obs.num += 1
   obs.sum += value
-  obs.sum2 += value^2
+  obs.sum2 += squared(value)
   return obs
 end
 

@@ -6,4 +6,5 @@ include("inform.jl")
 include("SimpleObservable.jl")
 include("BinningObservable.jl")
 include("Jackknife.jl")
+include("VectorObservable.jl")
 
