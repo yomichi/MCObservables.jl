@@ -1,2 +1,2 @@
-now_str() = "[" * LibC.strftime("%T", time()) * "] "
+now_str() = "[" * string(now()) * "] "
 inform(str...) = info(now_str(), map(string, str)...)

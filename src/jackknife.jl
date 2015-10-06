@@ -7,23 +7,25 @@ end
 
 Jackknife(jk::Jackknife, f::Function) = Jackknife(map(f,jk.xs))
 
-function Jackknife(b::BinningObservable)
-  if count(b) > 0
-    xs = b.bins
-    s = sum(xs)
-    n = length(xs)
-    jk = map(x->(s-x)/(n-1), xs)
-    return Jackknife(jk)
-  else
-    return Jackknife(zeros(0))
+function jk_helper(xs)
+  s = sum(xs)
+  n = length(xs)-1
+  ret = similar(xs)
+  for i in 1:n+1
+    ret[i] = (s-xs[i])/n
   end
+  return ret
+end
+
+function Jackknife(o::ScalarObservable)
+  return count(o) > 0 ? Jackknife(jk_helper(o.bins)) : Jackknife(zeros(0))
 end
 
 count(jk::Jackknife) = length(jk.xs)
 
 function mean(jk::Jackknife)
   if isempty(jk) 
-    return nan(Float64)
+    return NaN
   else
     return mean(jk.xs)
   end
@@ -31,15 +33,16 @@ end
 function stderror(jk::Jackknife)
   n = count(jk)
   if n == 0
-    return nan(Float64)
+    return NaN
   elseif n == 1
-    return inf(Float64)
+    return Inf
   else
-    sums = mapreduce(x->[x,x*x], +, jk.xs)
-    sums /= n
-    sigma2 = sums[2] - sums[1]*sums[1]
+    m2 = sumabs2(jk.xs)
+    m2 /= n
+    m = mean(jk)
+    sigma2 = m2 - m*m
     sigma2 *= n-1
-    sigma2 = max(sigma2, 0.0)
+    sigma2 = maxzero(sigma2)
     return sqrt(sigma2)
   end
 end
@@ -97,8 +100,8 @@ end
 
 typealias JackknifeSet MCObservableSet{Jackknife}
 
-jackknife(bin::BinningObservable) = Jackknife(bin)
-function jackknife(obsset :: BinningObservableSet)
+jackknife(obs::ScalarObservable) = Jackknife(obs)
+function jackknife(obsset :: MCObservableSet)
   JK = JackknifeSet()
   for (k,v) in obsset
     JK[k] = Jackknife(v)

@@ -53,4 +53,4 @@ function testBinningObservable(numtest, MCS, rho = 0.5)
   inform("Succeed testing BinningObservable")
 end
 
-testBinningObservable(100_000, 32768)
+testBinningObservable(10_000, 16384)

@@ -3,17 +3,19 @@ import Base: zero, zeros, deepcopy, mean, show
 export SimpleObservable, stddev
 
 type SimpleObservable <: ScalarObservable
+  bins :: Vector{Float64}
   num :: Int64
   sum :: Float64
   sum2 :: Float64
 end
 
-SimpleObservable() = SimpleObservable(0, 0.0, 0.0)
+SimpleObservable() = SimpleObservable(zeros(0), 0, 0.0, 0.0)
 zero(::Type{SimpleObservable}) = SimpleObservable()
 zero(o::SimpleObservable) = SimpleObservable()
 zeros(::Type{SimpleObservable}, dims...) = reshape([zero(SimpleObservable) for i in 1:prod(dims)],dims)
 
 function reset!(obs :: SimpleObservable)
+  obs.bins = zeros(0)
   obs.num = 0
   obs.sum = 0.0
   obs.sum2 = 0.0
@@ -23,6 +25,7 @@ end
 count(obs::SimpleObservable) = obs.num
 
 function push!(obs :: SimpleObservable, value) 
+  push!(obs.bins, value)
   obs.num += 1
   obs.sum += value
   obs.sum2 += value^2
@@ -40,7 +43,7 @@ end
 function var(obs::SimpleObservable)
   if obs.num  > 1
     v = (obs.sum2 - obs.sum*obs.sum/obs.num)/(obs.num-1)
-    return max(v, 0.0)
+    return maxzero(v)
   elseif obs.num == 1
     return Inf
   else
@@ -65,6 +68,7 @@ function confidence_interval(obs::SimpleObservable, confidence_rate_symbol::Symb
 end
 
 function merge!(obs::SimpleObservable, other::SimpleObservable)
+  append!(obs.bins, other.bins)
   obs.num += other.num
   obs.sum += other.sum
   obs.sum2 += other.sum2
