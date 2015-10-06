@@ -36,7 +36,7 @@ function testBinningObservable(numtest, MCS, rho = 0.5)
     end
 
     if i/numtest >= progress
-      inform(iround(progress * 100), "% done.")
+      inform(round(Int, progress * 100), "% done.")
       progress += 0.05
     end
   end
