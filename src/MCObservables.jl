@@ -1,3 +1,5 @@
+isdefined(Base, :__precompile__) && __precompile__()
+
 module MCObservables
 
 import Base: show, <<, push!, mean, var, count, isempty, merge, merge!, zero, zeros, sum
